@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "A Rust port of superjson - safely serialize and deserialize data types beyond standard JSON"
 license = "MIT"
-repository = "https://github.com/tseki/superjson-rs"
+repository = "https://github.com/t-seki/superjson-rs"
 keywords = ["json", "superjson", "serialization", "serde"]
 categories = ["encoding", "parser-implementations"]
 
