@@ -106,6 +106,8 @@ fn serialize_value(value: &Value) -> Result<(serde_json::Value, Option<Annotatio
         Value::RegExp { source, flags } => {
             Ok((json!(format!("/{source}/{flags}")), Some(leaf("regexp"))))
         }
+
+        Value::Url(s) => Ok((json!(s), Some(leaf("URL")))),
     }
 }
 

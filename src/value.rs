@@ -27,6 +27,7 @@ pub enum Value {
     PosInfinity,
     NegInfinity,
     RegExp { source: String, flags: String },
+    Url(String),
 }
 
 impl fmt::Display for Value {
@@ -83,6 +84,7 @@ impl fmt::Display for Value {
             Value::PosInfinity => write!(f, "Infinity"),
             Value::NegInfinity => write!(f, "-Infinity"),
             Value::RegExp { source, flags } => write!(f, "/{source}/{flags}"),
+            Value::Url(s) => write!(f, "URL({s})"),
         }
     }
 }
