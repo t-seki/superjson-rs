@@ -29,7 +29,7 @@ pub struct Meta {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub values: Option<AnnotationValues>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub referential_equalities: Option<IndexMap<String, Vec<String>>>,
+    pub referential_equalities: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub v: Option<u8>,
 }
@@ -63,7 +63,10 @@ impl TypeAnnotation {
 }
 
 impl Serialize for TypeAnnotation {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error> {
         match self {
             TypeAnnotation::Leaf(name) => {
                 let mut seq = serializer.serialize_seq(Some(1))?;
@@ -81,7 +84,9 @@ impl Serialize for TypeAnnotation {
 }
 
 impl<'de> Deserialize<'de> for TypeAnnotation {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> std::result::Result<Self, D::Error> {
         deserializer.deserialize_seq(TypeAnnotationVisitor)
     }
 }
@@ -95,7 +100,10 @@ impl<'de> Visitor<'de> for TypeAnnotationVisitor {
         formatter.write_str("a type annotation array: [\"typeName\"] or [\"typeName\", {children}]")
     }
 
-    fn visit_seq<A: SeqAccess<'de>>(self, mut seq: A) -> std::result::Result<TypeAnnotation, A::Error> {
+    fn visit_seq<A: SeqAccess<'de>>(
+        self,
+        mut seq: A,
+    ) -> std::result::Result<TypeAnnotation, A::Error> {
         let name: String = seq
             .next_element()?
             .ok_or_else(|| de::Error::invalid_length(0, &"at least 1 element"))?;
@@ -123,7 +131,10 @@ pub enum AnnotationValues {
 }
 
 impl Serialize for AnnotationValues {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+    fn serialize<S: serde::Serializer>(
+        &self,
+        serializer: S,
+    ) -> std::result::Result<S::Ok, S::Error> {
         match self {
             AnnotationValues::Root(ann) => ann.serialize(serializer),
             AnnotationValues::Children(map) => map.serialize(serializer),
@@ -132,7 +143,9 @@ impl Serialize for AnnotationValues {
 }
 
 impl<'de> Deserialize<'de> for AnnotationValues {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        deserializer: D,
+    ) -> std::result::Result<Self, D::Error> {
         let value = serde_json::Value::deserialize(deserializer)?;
         match &value {
             serde_json::Value::Array(_) => {

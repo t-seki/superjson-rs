@@ -10,15 +10,10 @@ use crate::{AnnotationValues, Result, SuperJson, TypeAnnotation, Value};
 /// This restores extended types (Date, BigInt, Set, etc.) from their
 /// JSON-compatible representations using the tree-structured type annotations.
 pub fn deserialize(superjson: &SuperJson) -> Result<Value> {
-    let values = superjson
-        .meta
-        .as_ref()
-        .and_then(|m| m.values.as_ref());
+    let values = superjson.meta.as_ref().and_then(|m| m.values.as_ref());
 
     match values {
-        Some(AnnotationValues::Root(ann)) => {
-            deserialize_annotated(&superjson.json, ann)
-        }
+        Some(AnnotationValues::Root(ann)) => deserialize_annotated(&superjson.json, ann),
         Some(AnnotationValues::Children(children)) => {
             deserialize_with_children(&superjson.json, children)
         }
@@ -31,13 +26,13 @@ fn deserialize_plain(json: &serde_json::Value) -> Result<Value> {
     match json {
         serde_json::Value::Null => Ok(Value::Null),
         serde_json::Value::Bool(b) => Ok(Value::Bool(*b)),
-        serde_json::Value::Number(n) => Ok(Value::Number(
-            n.as_f64().ok_or_else(|| Error::TypeMismatch {
+        serde_json::Value::Number(n) => Ok(Value::Number(n.as_f64().ok_or_else(|| {
+            Error::TypeMismatch {
                 path: String::new(),
                 expected: "f64-compatible number".to_string(),
                 actual: format!("{n}"),
-            })?,
-        )),
+            }
+        })?)),
         serde_json::Value::String(s) => Ok(Value::String(s.clone())),
         serde_json::Value::Array(arr) => {
             let values: Result<Vec<_>> = arr.iter().map(deserialize_plain).collect();
@@ -54,10 +49,7 @@ fn deserialize_plain(json: &serde_json::Value) -> Result<Value> {
 }
 
 /// Deserialize a JSON value that has a direct type annotation.
-fn deserialize_annotated(
-    json: &serde_json::Value,
-    annotation: &TypeAnnotation,
-) -> Result<Value> {
+fn deserialize_annotated(json: &serde_json::Value, annotation: &TypeAnnotation) -> Result<Value> {
     let type_name = annotation.type_name();
     let inner_children = annotation.children();
 
@@ -286,9 +278,10 @@ fn parse_regexp(s: &str) -> Result<Value> {
         )));
     }
 
-    let last_slash = s.rfind('/').filter(|&i| i > 0).ok_or_else(|| {
-        Error::InvalidRegExp(format!("regexp must have closing '/': {s}"))
-    })?;
+    let last_slash = s
+        .rfind('/')
+        .filter(|&i| i > 0)
+        .ok_or_else(|| Error::InvalidRegExp(format!("regexp must have closing '/': {s}")))?;
 
     let source = s[1..last_slash].to_string();
     let flags = s[last_slash + 1..].to_string();
@@ -380,10 +373,7 @@ mod tests {
 
     #[test]
     fn test_deserialize_set() {
-        let sj = make_superjson_root(
-            json!([1.0, 2.0, 3.0]),
-            TypeAnnotation::Leaf("set".into()),
-        );
+        let sj = make_superjson_root(json!([1.0, 2.0, 3.0]), TypeAnnotation::Leaf("set".into()));
         assert_eq!(
             deserialize(&sj).unwrap(),
             Value::Set(vec![
@@ -414,10 +404,7 @@ mod tests {
 
     #[test]
     fn test_deserialize_map() {
-        let sj = make_superjson_root(
-            json!([["key", 1.0]]),
-            TypeAnnotation::Leaf("map".into()),
-        );
+        let sj = make_superjson_root(json!([["key", 1.0]]), TypeAnnotation::Leaf("map".into()));
         assert_eq!(
             deserialize(&sj).unwrap(),
             Value::Map(vec![(Value::String("key".into()), Value::Number(1.0))])
@@ -510,10 +497,7 @@ mod tests {
         children.insert("1".to_string(), TypeAnnotation::Leaf("Date".into()));
         children.insert("2".to_string(), TypeAnnotation::Leaf("bigint".into()));
 
-        let sj = make_superjson_children(
-            json!([1.0, "1970-01-01T00:00:00.000Z", "999"]),
-            children,
-        );
+        let sj = make_superjson_children(json!([1.0, "1970-01-01T00:00:00.000Z", "999"]), children);
         let result = deserialize(&sj).unwrap();
         let arr = result.as_array().unwrap();
         assert_eq!(arr[0], Value::Number(1.0));

@@ -6,7 +6,7 @@
 use chrono::TimeZone;
 use indexmap::IndexMap;
 use num_bigint::BigInt;
-use superjson_rs::{parse, stringify, Value};
+use superjson_rs::{Value, parse, stringify};
 
 /// Helper: serialize a Value and parse the resulting JSON string
 /// to compare the raw JSON structure with expected JS output.
@@ -73,10 +73,7 @@ fn js_compat_map_with_nan_key() {
     // → { json: { a: [["NaN", null]] },
     //     meta: { values: { a: ["map", { "0.0": ["number"] }] }, v: 1 } }
     let mut obj = IndexMap::new();
-    obj.insert(
-        "a".to_string(),
-        Value::Map(vec![(Value::NaN, Value::Null)]),
-    );
+    obj.insert("a".to_string(), Value::Map(vec![(Value::NaN, Value::Null)]));
 
     let result = serialize_to_json(&Value::Object(obj));
 
@@ -474,4 +471,59 @@ fn js_compat_deserialize_toplevel_extended_type() {
             Value::Number(3.0),
         ])
     );
+}
+
+// ============================================================
+// referentialEqualities parse tolerance tests
+// ============================================================
+
+#[test]
+fn js_compat_deserialize_with_referential_equalities_record() {
+    // Format 1: Record<string, string[]> — normal references
+    // JS: const obj = { a: { x: 1 }, b: null }; obj.b = obj.a;
+    // SuperJSON.serialize(obj)
+    let js_output = r#"{
+        "json": { "a": { "x": 1 }, "b": null },
+        "meta": { "referentialEqualities": { "a": ["b"] } }
+    }"#;
+
+    // Should parse without error (referentialEqualities is ignored but doesn't break parsing)
+    let value = parse(js_output).unwrap();
+    let obj = value.as_object().unwrap();
+    assert_eq!(
+        obj.get("a").unwrap().as_object().unwrap().get("x").unwrap(),
+        &Value::Number(1.0)
+    );
+}
+
+#[test]
+fn js_compat_deserialize_with_referential_equalities_root_array() {
+    // Format 2: [string[]] — root-level references
+    // JS: const obj = { a: {} }; obj.a.self = obj;
+    // SuperJSON.serialize(obj)
+    let js_output = r#"{
+        "json": { "a": { "self": null } },
+        "meta": { "referentialEqualities": [["a.self"]] }
+    }"#;
+
+    // Should parse without error (previously this would fail with a deserialization error)
+    let value = parse(js_output).unwrap();
+    let obj = value.as_object().unwrap();
+    assert!(obj.get("a").is_some());
+}
+
+#[test]
+fn js_compat_deserialize_with_referential_equalities_mixed() {
+    // Format 3: [string[], Record<string, string[]>] — both root and normal references
+    let js_output = r#"{
+        "json": { "a": { "self": null }, "b": null, "c": null },
+        "meta": { "referentialEqualities": [["a.self"], { "a": ["b", "c"] }] }
+    }"#;
+
+    // Should parse without error
+    let value = parse(js_output).unwrap();
+    let obj = value.as_object().unwrap();
+    assert!(obj.get("a").is_some());
+    assert!(obj.get("b").is_some());
+    assert!(obj.get("c").is_some());
 }
