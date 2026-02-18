@@ -153,6 +153,14 @@ fn roundtrip_nested_object_with_dot_in_key() {
 }
 
 #[test]
+fn roundtrip_url() {
+    assert_roundtrip(Value::Url("https://example.com/".into()));
+    assert_roundtrip(Value::Url(
+        "https://example.com/path?query=value&foo=bar#fragment".into(),
+    ));
+}
+
+#[test]
 fn roundtrip_complex_nested_structure() {
     let dt = chrono::Utc.timestamp_millis_opt(0).unwrap();
     let mut inner = IndexMap::new();
