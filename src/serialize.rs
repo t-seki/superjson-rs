@@ -99,6 +99,7 @@ fn serialize_value(value: &Value) -> Result<(serde_json::Value, Option<Annotatio
             Ok((serde_json::Value::Array(json_arr), Some(annotation)))
         }
 
+        Value::NegZero => Ok((json!("-0"), Some(leaf("number")))),
         Value::NaN => Ok((json!("NaN"), Some(leaf("number")))),
         Value::PosInfinity => Ok((json!("Infinity"), Some(leaf("number")))),
         Value::NegInfinity => Ok((json!("-Infinity"), Some(leaf("number")))),

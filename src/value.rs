@@ -26,6 +26,7 @@ pub enum Value {
     NaN,
     PosInfinity,
     NegInfinity,
+    NegZero,
     RegExp { source: String, flags: String },
 }
 
@@ -82,6 +83,7 @@ impl fmt::Display for Value {
             Value::NaN => write!(f, "NaN"),
             Value::PosInfinity => write!(f, "Infinity"),
             Value::NegInfinity => write!(f, "-Infinity"),
+            Value::NegZero => write!(f, "-0"),
             Value::RegExp { source, flags } => write!(f, "/{source}/{flags}"),
         }
     }
@@ -117,6 +119,8 @@ impl From<f64> for Value {
             } else {
                 Value::NegInfinity
             }
+        } else if n == 0.0 && n.is_sign_negative() {
+            Value::NegZero
         } else {
             Value::Number(n)
         }

@@ -223,6 +223,38 @@ fn js_compat_special_numbers() {
 }
 
 #[test]
+fn js_compat_neg_zero() {
+    // JS: SuperJSON.serialize(-0)
+    // → { json: "-0", meta: { values: ["number"], v: 1 } }
+    let result = serialize_to_json(&Value::NegZero);
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": "-0",
+            "meta": { "values": ["number"], "v": 1 }
+        })
+    );
+}
+
+#[test]
+fn js_compat_neg_zero_in_object() {
+    // JS: SuperJSON.serialize({ a: -0 })
+    let mut obj = IndexMap::new();
+    obj.insert("a".to_string(), Value::NegZero);
+
+    let result = serialize_to_json(&Value::Object(obj));
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": { "a": "-0" },
+            "meta": { "values": { "a": ["number"] }, "v": 1 }
+        })
+    );
+}
+
+#[test]
 fn js_compat_no_meta_for_plain_json() {
     // JS: SuperJSON.serialize({ name: "Alice", age: 30 })
     // → { json: { name: "Alice", age: 30 } }
