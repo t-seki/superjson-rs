@@ -243,6 +243,44 @@ fn js_compat_no_meta_for_plain_json() {
     assert!(result.get("meta").is_none());
 }
 
+#[test]
+fn js_compat_object_with_dot_in_key() {
+    // JS: SuperJSON.serialize({ "a.b": new Date(0) })
+    // → { json: { "a.b": "1970-01-01T00:00:00.000Z" },
+    //     meta: { values: { "a\\.b": ["Date"] }, v: 1 } }
+    let mut obj = IndexMap::new();
+    obj.insert(
+        "a.b".to_string(),
+        Value::Date(chrono::Utc.timestamp_millis_opt(0).unwrap()),
+    );
+
+    let result = serialize_to_json(&Value::Object(obj));
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": { "a.b": "1970-01-01T00:00:00.000Z" },
+            "meta": { "values": { "a\\.b": ["Date"] }, "v": 1 }
+        })
+    );
+}
+
+#[test]
+fn js_compat_deserialize_dot_in_key() {
+    // Parse a JSON string where JS superjson escaped a dot in the key
+    let js_output = r#"{
+        "json": { "a.b": "1970-01-01T00:00:00.000Z" },
+        "meta": { "values": { "a\\.b": ["Date"] }, "v": 1 }
+    }"#;
+
+    let value = parse(js_output).unwrap();
+    let obj = value.as_object().unwrap();
+    assert_eq!(
+        obj.get("a.b").unwrap(),
+        &Value::Date(chrono::Utc.timestamp_millis_opt(0).unwrap())
+    );
+}
+
 // ============================================================
 // Deserialize JS superjson output
 // ============================================================

@@ -122,6 +122,32 @@ fn roundtrip_regexp() {
 }
 
 #[test]
+fn roundtrip_object_with_dot_in_key() {
+    let mut obj = IndexMap::new();
+    obj.insert(
+        "a.b".to_string(),
+        Value::Date(chrono::Utc.timestamp_millis_opt(0).unwrap()),
+    );
+    assert_roundtrip(Value::Object(obj));
+}
+
+#[test]
+fn roundtrip_object_with_backslash_in_key() {
+    let mut obj = IndexMap::new();
+    obj.insert("a\\b".to_string(), Value::Undefined);
+    assert_roundtrip(Value::Object(obj));
+}
+
+#[test]
+fn roundtrip_nested_object_with_dot_in_key() {
+    let mut inner = IndexMap::new();
+    inner.insert("x".to_string(), Value::BigInt(BigInt::from(42)));
+    let mut outer = IndexMap::new();
+    outer.insert("a.b".to_string(), Value::Object(inner));
+    assert_roundtrip(Value::Object(outer));
+}
+
+#[test]
 fn roundtrip_complex_nested_structure() {
     let dt = chrono::Utc.timestamp_millis_opt(0).unwrap();
     let mut inner = IndexMap::new();

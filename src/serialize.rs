@@ -52,7 +52,7 @@ fn serialize_value(value: &Value) -> Result<(serde_json::Value, Option<Annotatio
             for (key, val) in map {
                 let (json_val, ann) = serialize_value(val)?;
                 json_map.insert(key.clone(), json_val);
-                collect_child_annotation(&mut children, key, ann);
+                collect_child_annotation(&mut children, &crate::path::escape_key(key), ann);
             }
 
             let annotation = if children.is_empty() {
