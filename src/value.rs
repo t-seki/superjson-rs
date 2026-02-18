@@ -29,6 +29,11 @@ pub enum Value {
     NegZero,
     RegExp { source: String, flags: String },
     Url(String),
+    Error {
+        name: String,
+        message: String,
+        cause: Option<Box<Value>>,
+    },
 }
 
 impl fmt::Display for Value {
@@ -87,6 +92,17 @@ impl fmt::Display for Value {
             Value::NegZero => write!(f, "-0"),
             Value::RegExp { source, flags } => write!(f, "/{source}/{flags}"),
             Value::Url(s) => write!(f, "URL({s})"),
+            Value::Error {
+                name,
+                message,
+                cause,
+            } => {
+                write!(f, "{name}(\"{message}\")")?;
+                if let Some(c) = cause {
+                    write!(f, " caused by {c}")?;
+                }
+                Ok(())
+            }
         }
     }
 }
