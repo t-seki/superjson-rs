@@ -27,7 +27,10 @@ pub enum Value {
     PosInfinity,
     NegInfinity,
     NegZero,
-    RegExp { source: String, flags: String },
+    RegExp {
+        source: String,
+        flags: String,
+    },
     Url(String),
     Error {
         name: String,

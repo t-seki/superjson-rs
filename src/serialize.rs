@@ -74,8 +74,7 @@ fn serialize_value(value: &Value) -> Result<(serde_json::Value, Option<Annotatio
         Value::BigInt(n) => Ok((json!(n.to_string()), Some(leaf("bigint")))),
 
         Value::Set(items) => {
-            let (json_val, inner) =
-                serialize_container_inner(items.iter(), ContainerKind::Array)?;
+            let (json_val, inner) = serialize_container_inner(items.iter(), ContainerKind::Array)?;
             let annotation = make_typed_annotation("set", inner);
             Ok((json_val, Some(annotation)))
         }
@@ -285,11 +284,7 @@ mod tests {
 
     #[test]
     fn test_serialize_set_simple() {
-        let result = serialize(&Value::Set(vec![
-            Value::Number(1.0),
-            Value::Number(2.0),
-        ]))
-        .unwrap();
+        let result = serialize(&Value::Set(vec![Value::Number(1.0), Value::Number(2.0)])).unwrap();
         assert_eq!(result.json, json!([1.0, 2.0]));
         assert_eq!(
             result.meta.unwrap().values.unwrap(),
@@ -428,7 +423,11 @@ mod tests {
         let mut obj = IndexMap::new();
         obj.insert(
             "a".to_string(),
-            Value::Set(vec![Value::Number(1.0), Value::Undefined, Value::Number(2.0)]),
+            Value::Set(vec![
+                Value::Number(1.0),
+                Value::Undefined,
+                Value::Number(2.0),
+            ]),
         );
 
         let result = serialize(&Value::Object(obj)).unwrap();

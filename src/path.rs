@@ -152,10 +152,7 @@ mod tests {
 
     #[test]
     fn test_join_with_dot_in_key() {
-        let segments = vec![
-            PathSegment::Key("a.b".into()),
-            PathSegment::Key("c".into()),
-        ];
+        let segments = vec![PathSegment::Key("a.b".into()), PathSegment::Key("c".into())];
         assert_eq!(join(&segments), "a\\.b.c");
     }
 
@@ -185,10 +182,7 @@ mod tests {
     fn test_parse_with_escaped_dot() {
         assert_eq!(
             parse("a\\.b.c"),
-            vec![
-                PathSegment::Key("a.b".into()),
-                PathSegment::Key("c".into()),
-            ]
+            vec![PathSegment::Key("a.b".into()), PathSegment::Key("c".into()),]
         );
     }
 

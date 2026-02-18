@@ -1,7 +1,7 @@
 use chrono::TimeZone;
 use indexmap::IndexMap;
 use num_bigint::BigInt;
-use superjson_rs::{parse, stringify, Value};
+use superjson_rs::{Value, parse, stringify};
 
 /// Helper to assert that a Value survives a roundtrip through stringify/parse.
 fn assert_roundtrip(value: Value) {
