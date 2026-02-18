@@ -163,7 +163,10 @@ fn deserialize_with_children(
         serde_json::Value::Object(map) => {
             let mut obj = IndexMap::with_capacity(map.len());
             for (key, val) in map {
-                obj.insert(key.clone(), deserialize_child(val, key, children)?);
+                obj.insert(
+                    key.clone(),
+                    deserialize_child(val, &crate::path::escape_key(key), children)?,
+                );
             }
             Ok(Value::Object(obj))
         }
