@@ -223,6 +223,78 @@ fn js_compat_special_numbers() {
 }
 
 #[test]
+fn js_compat_error_simple() {
+    // JS: SuperJSON.serialize(new Error("fail"))
+    // → { json: { name: "Error", message: "fail" },
+    //     meta: { values: ["Error"], v: 1 } }
+    let result = serialize_to_json(&Value::Error {
+        name: "Error".into(),
+        message: "fail".into(),
+        cause: None,
+    });
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": { "name": "Error", "message": "fail" },
+            "meta": { "values": ["Error"], "v": 1 }
+        })
+    );
+}
+
+#[test]
+fn js_compat_error_with_cause() {
+    // JS: SuperJSON.serialize(new Error("outer", { cause: new Error("inner") }))
+    // → { json: { name: "Error", message: "outer",
+    //             cause: { name: "Error", message: "inner" } },
+    //     meta: { values: ["Error", { cause: ["Error"] }], v: 1 } }
+    let result = serialize_to_json(&Value::Error {
+        name: "Error".into(),
+        message: "outer".into(),
+        cause: Some(Box::new(Value::Error {
+            name: "Error".into(),
+            message: "inner".into(),
+            cause: None,
+        })),
+    });
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": {
+                "name": "Error", "message": "outer",
+                "cause": { "name": "Error", "message": "inner" }
+            },
+            "meta": { "values": ["Error", { "cause": ["Error"] }], "v": 1 }
+        })
+    );
+}
+
+#[test]
+fn js_compat_error_in_object() {
+    // JS: SuperJSON.serialize({ err: new Error("fail") })
+    let mut obj = IndexMap::new();
+    obj.insert(
+        "err".to_string(),
+        Value::Error {
+            name: "Error".into(),
+            message: "fail".into(),
+            cause: None,
+        },
+    );
+
+    let result = serialize_to_json(&Value::Object(obj));
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": { "err": { "name": "Error", "message": "fail" } },
+            "meta": { "values": { "err": ["Error"] }, "v": 1 }
+        })
+    );
+}
+
+#[test]
 fn js_compat_no_meta_for_plain_json() {
     // JS: SuperJSON.serialize({ name: "Alice", age: 30 })
     // → { json: { name: "Alice", age: 30 } }

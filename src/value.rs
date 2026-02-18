@@ -27,6 +27,11 @@ pub enum Value {
     PosInfinity,
     NegInfinity,
     RegExp { source: String, flags: String },
+    Error {
+        name: String,
+        message: String,
+        cause: Option<Box<Value>>,
+    },
 }
 
 impl fmt::Display for Value {
@@ -83,6 +88,17 @@ impl fmt::Display for Value {
             Value::PosInfinity => write!(f, "Infinity"),
             Value::NegInfinity => write!(f, "-Infinity"),
             Value::RegExp { source, flags } => write!(f, "/{source}/{flags}"),
+            Value::Error {
+                name,
+                message,
+                cause,
+            } => {
+                write!(f, "{name}(\"{message}\")")?;
+                if let Some(c) = cause {
+                    write!(f, " caused by {c}")?;
+                }
+                Ok(())
+            }
         }
     }
 }
