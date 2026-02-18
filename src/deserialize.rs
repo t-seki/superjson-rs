@@ -126,9 +126,10 @@ fn deserialize_annotated(
                 "NaN" => Ok(Value::NaN),
                 "Infinity" => Ok(Value::PosInfinity),
                 "-Infinity" => Ok(Value::NegInfinity),
+                "-0" => Ok(Value::NegZero),
                 _ => Err(Error::TypeMismatch {
                     path: String::new(),
-                    expected: "NaN, Infinity, or -Infinity".to_string(),
+                    expected: "NaN, Infinity, -Infinity, or -0".to_string(),
                     actual: s.to_string(),
                 }),
             }
