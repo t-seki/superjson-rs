@@ -161,6 +161,64 @@ fn roundtrip_url() {
 }
 
 #[test]
+fn roundtrip_error_simple() {
+    assert_roundtrip(Value::Error {
+        name: "Error".into(),
+        message: "something went wrong".into(),
+        cause: None,
+    });
+}
+
+#[test]
+fn roundtrip_error_with_string_cause() {
+    assert_roundtrip(Value::Error {
+        name: "Error".into(),
+        message: "fail".into(),
+        cause: Some(Box::new(Value::String("root cause".into()))),
+    });
+}
+
+#[test]
+fn roundtrip_error_with_error_cause() {
+    assert_roundtrip(Value::Error {
+        name: "TypeError".into(),
+        message: "outer".into(),
+        cause: Some(Box::new(Value::Error {
+            name: "Error".into(),
+            message: "inner".into(),
+            cause: None,
+        })),
+    });
+}
+
+#[test]
+fn roundtrip_error_with_date_cause() {
+    let dt = chrono::Utc.timestamp_millis_opt(0).unwrap();
+    assert_roundtrip(Value::Error {
+        name: "Error".into(),
+        message: "fail".into(),
+        cause: Some(Box::new(Value::Date(dt))),
+    });
+}
+
+#[test]
+fn roundtrip_error_deeply_nested_cause() {
+    assert_roundtrip(Value::Error {
+        name: "Error".into(),
+        message: "level 1".into(),
+        cause: Some(Box::new(Value::Error {
+            name: "Error".into(),
+            message: "level 2".into(),
+            cause: Some(Box::new(Value::Error {
+                name: "Error".into(),
+                message: "level 3".into(),
+                cause: None,
+            })),
+        })),
+    });
+}
+
+#[test]
 fn roundtrip_complex_nested_structure() {
     let dt = chrono::Utc.timestamp_millis_opt(0).unwrap();
     let mut inner = IndexMap::new();

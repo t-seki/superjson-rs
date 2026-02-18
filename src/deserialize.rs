@@ -145,6 +145,49 @@ fn deserialize_annotated(
             Ok(Value::Url(s.to_string()))
         }
 
+        "Error" => {
+            let obj = json.as_object().ok_or_else(|| Error::TypeMismatch {
+                path: String::new(),
+                expected: "object for Error".to_string(),
+                actual: format!("{json}"),
+            })?;
+
+            let name = obj
+                .get("name")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| Error::TypeMismatch {
+                    path: "name".to_string(),
+                    expected: "string for Error name".to_string(),
+                    actual: format!("{:?}", obj.get("name")),
+                })?
+                .to_string();
+
+            let message = obj
+                .get("message")
+                .and_then(|v| v.as_str())
+                .ok_or_else(|| Error::TypeMismatch {
+                    path: "message".to_string(),
+                    expected: "string for Error message".to_string(),
+                    actual: format!("{:?}", obj.get("message")),
+                })?
+                .to_string();
+
+            let empty = IndexMap::new();
+            let children = inner_children.unwrap_or(&empty);
+
+            let cause = if let Some(cause_json) = obj.get("cause") {
+                Some(Box::new(deserialize_child(cause_json, "cause", children)?))
+            } else {
+                None
+            };
+
+            Ok(Value::Error {
+                name,
+                message,
+                cause,
+            })
+        }
+
         _ => Err(Error::InvalidTypeAnnotation(format!(
             "unknown type '{type_name}'"
         ))),

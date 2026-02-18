@@ -109,6 +109,27 @@ fn serialize_value(value: &Value) -> Result<(serde_json::Value, Option<Annotatio
         }
 
         Value::Url(s) => Ok((json!(s), Some(leaf("URL")))),
+
+        Value::Error {
+            name,
+            message,
+            cause,
+        } => {
+            let mut json_map = serde_json::Map::new();
+            json_map.insert("name".to_string(), json!(name));
+            json_map.insert("message".to_string(), json!(message));
+
+            let mut inner_children = IndexMap::new();
+
+            if let Some(cause_val) = cause {
+                let (cause_json, cause_ann) = serialize_value(cause_val)?;
+                json_map.insert("cause".to_string(), cause_json);
+                collect_child_annotation(&mut inner_children, "cause", cause_ann);
+            }
+
+            let annotation = make_typed_annotation("Error", inner_children);
+            Ok((serde_json::Value::Object(json_map), Some(annotation)))
+        }
     }
 }
 
