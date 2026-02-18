@@ -140,6 +140,11 @@ fn deserialize_annotated(
             parse_regexp(s)
         }
 
+        "URL" => {
+            let s = expect_str(json, type_name)?;
+            Ok(Value::Url(s.to_string()))
+        }
+
         _ => Err(Error::InvalidTypeAnnotation(format!(
             "unknown type '{type_name}'"
         ))),

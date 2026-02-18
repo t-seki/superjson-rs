@@ -255,6 +255,43 @@ fn js_compat_neg_zero_in_object() {
 }
 
 #[test]
+fn js_compat_url() {
+    // JS: SuperJSON.serialize({ link: new URL("https://example.com") })
+    // → { json: { link: "https://example.com/" },
+    //     meta: { values: { link: ["URL"] }, v: 1 } }
+    let mut obj = IndexMap::new();
+    obj.insert(
+        "link".to_string(),
+        Value::Url("https://example.com/".into()),
+    );
+
+    let result = serialize_to_json(&Value::Object(obj));
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": { "link": "https://example.com/" },
+            "meta": { "values": { "link": ["URL"] }, "v": 1 }
+        })
+    );
+}
+
+#[test]
+fn js_compat_toplevel_url() {
+    // JS: SuperJSON.serialize(new URL("https://example.com"))
+    // → { json: "https://example.com/", meta: { values: ["URL"], v: 1 } }
+    let result = serialize_to_json(&Value::Url("https://example.com/".into()));
+
+    assert_eq!(
+        result,
+        serde_json::json!({
+            "json": "https://example.com/",
+            "meta": { "values": ["URL"], "v": 1 }
+        })
+    );
+}
+
+#[test]
 fn js_compat_no_meta_for_plain_json() {
     // JS: SuperJSON.serialize({ name: "Alice", age: 30 })
     // → { json: { name: "Alice", age: 30 } }
