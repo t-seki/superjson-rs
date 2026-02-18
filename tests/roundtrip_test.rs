@@ -110,6 +110,11 @@ fn roundtrip_infinity() {
 }
 
 #[test]
+fn roundtrip_neg_zero() {
+    assert_roundtrip(Value::NegZero);
+}
+
+#[test]
 fn roundtrip_regexp() {
     assert_roundtrip(Value::RegExp {
         source: "\\d+".into(),
